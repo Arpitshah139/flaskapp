@@ -14,8 +14,18 @@ mongo = PyMongo(app)
 APP_URL = "http://127.0.0.1:5000"
 collection = Mongo.collectionname
 
+class Register(Resource):
+    def post(self):
+        data = request.get_json()
+        if not data:
+            data = {"response": "ERROR"}
+            return jsonify(data)
+        else:
+            token = CommanFunction.encode_auth_token(data)
+            return jsonify({"token":str(token)})
 class Imdb(Resource):
     def get(self, name=None, score=None, director=None):
+
         data = []
         if name:
 
@@ -47,30 +57,42 @@ class Imdb(Resource):
 
             return jsonify({"response": data})
     def post(self):
-        data = request.get_json()
-        if not data:
-            data = {"response": "ERROR"}
-            return jsonify(data)
-        else:
-            name = data.get('name')
-            if name:
-                if mongo.db[collection].find_one({IMDB.name: name}):
-                    return {"response": "Data already exists."}
-                else:
-                    mongo.db[collection].insert(data)
-                    return {"respinse":"data inserted"}
+        role = CommanFunction.decode_auth_token(request.headers.get('auth'))
+        if role == 1:
+            data = request.get_json()
+            if not data:
+                data = {"response": "ERROR"}
+                return jsonify(data)
             else:
-                return {"response": "name number missing"}
+                name = data.get('name')
+                if name:
+                    if mongo.db[collection].find_one({IMDB.name: name}):
+                        return {"response": "Data already exists."}
+                    else:
+                        mongo.db[collection].insert(data)
+                        return {"respinse":"data inserted"}
+                else:
+                    return {"response": "name is missing"}
+        else:
+            return {"response":"user is not authorized to access the resource"}
 
 
     def put(self, name):
-        data = request.get_json()
-        mongo.db[collection].update({IMDB.name: name}, {'$set': data})
-        return {"response" : "data has been updated"}
+        role = CommanFunction.decode_auth_token(request.headers.get('auth'))
+        if role == 1:
+            data = request.get_json()
+            mongo.db[collection].update({IMDB.name: name}, {'$set': data})
+            return {"response" : "data has been updated"}
+        else:
+            return {"response":"user is not authorized to access the resource"}
 
     def delete(self, name):
-        mongo.db[collection].remove({IMDB.name: name})
-        return {"response" : "data has been deleted"}
+        role = CommanFunction.decode_auth_token(request.headers.get('auth'))
+        if role == 1:
+            mongo.db[collection].remove({IMDB.name: name})
+            return {"response" : "data has been deleted"}
+        else:
+            return {"response":"user is not authorized to access the resource"}
 
 
 class Index(Resource):
@@ -79,6 +101,7 @@ class Index(Resource):
 
 
 api = Api(app)
+api.add_resource(Register, "/register")
 api.add_resource(Index, "/", endpoint="index")
 api.add_resource(Imdb, "/api", endpoint="imdb")
 api.add_resource(Imdb, "/api/<string:name>", endpoint="name")
