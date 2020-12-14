@@ -8,8 +8,8 @@ from Helper import *
 
 app = Flask(__name__)
 app.config["MONGO_DBNAME"] = Mongo.Dbname
-app.config["MONGO_URI"] = "mongodb://localhost:27017/" + Mongo.Dbname
-
+# app.config["MONGO_URI"] = "mongodb://localhost:27017/" + Mongo.Dbname
+app.config["MONGO_URI"] = "mongodb+srv://arpit:qzrgzdEmyttRhD3m@cluster0.3bqjj.mongodb.net/imdb?retryWrites=true&w=majority"
 mongo = PyMongo(app)
 APP_URL = "http://127.0.0.1:5000"
 collection = Mongo.collectionname
