@@ -1,6 +1,6 @@
 dnspython
 pymongo
-jwt
+PyJWT
 Flask
 Flask-PyMongo
 Flask-RESTful
